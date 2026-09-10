@@ -61,10 +61,11 @@
 #          is asked to upgrade rather than silently running an older tool.
 #          tasks-axi feature probes remain a separate defense-in-depth check.
 #          glab is MISSING only while at least one clone under projects/ has an
-#          origin whose host passes bin/fm-pr-lib.sh's GitLab host rule (any
-#          DNS host but github.com, because GitHub and GitLab are the only
-#          forges firstmate drives); a home with only GitHub, file, or no origins
-#          is never told to install it.
+#          origin whose host passes bin/fm-pr-lib.sh's GitLab host rule: any
+#          DNS host but literally github.com counts as GitLab, so a GitHub SSH
+#          alias (git@github-work:o/r.git) or another forge also triggers the
+#          line. Such a home may ignore it or silence it by installing glab; a
+#          home with only github.com, file, or no origins is never told to.
 #          tasks-axi and quota-axi are required bootstrap tools (same class as
 #          lavish-axi). A compatible tasks-axi default backend is silent.
 #          quota-axi is required for the agent-owned dispatch-profile array
@@ -887,7 +888,7 @@ origin_url_host() {
   local url=$1
   case "$url" in
     *://*) url=${url#*://}; url=${url%%/*} ;;
-    *@*:*|*:*) url=${url%%:*} ;;
+    *:*) url=${url%%:*} ;;
     *) return 1 ;;
   esac
   url=${url##*@}
