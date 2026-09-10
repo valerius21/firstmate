@@ -55,6 +55,15 @@
 # closes a row that reads as an open captain call. An answer that closes the row
 # first applies any supported retained artifact from the validated record, then
 # replay simply retires the record.
+#
+# FORGE LINKS. tasks-axi's `--pr` flag accepts GitHub pull-request URLs only,
+# while a task's recorded pr= may be a GitLab merge-request URL. Every `--pr`
+# this library forwards is classified through bin/fm-pr-lib.sh's provider parse:
+# a github link is passed as `--pr`, and any other link is carried into the
+# item body instead - as `tasks-axi done --note "MR <url>"` on a close, and as
+# the deliverable line on a retention - so the transition succeeds and the link
+# survives. The pending-close record keeps the original `--pr <url>` pair; the
+# rewrite happens when the close is applied, so an old record replays correctly.
 
 # Set by fm_backlog_transition_applies for a return-1 exemption.
 # shellcheck disable=SC2034 # Output global, read by the sourcing caller.
@@ -508,10 +517,29 @@ fm_backlog_start() {  # <data-dir> <id>
   fm_backlog_mutate "$1" start "$2"
 }
 
+# True when <url> is a GitHub pull-request URL, the only link tasks-axi's
+# `--pr` accepts (FORGE LINKS above).
+fm_backlog_pr_flag_supported() {  # <url>
+  if ! declare -F fm_pr_url_parse >/dev/null; then
+    # shellcheck source=bin/fm-pr-lib.sh disable=SC1091
+    . "${BASH_SOURCE[0]%/*}/fm-pr-lib.sh"
+  fi
+  fm_pr_url_parse "$1" && [ "$FM_PR_PROVIDER" = github ]
+}
+
 fm_backlog_done() {  # <data-dir> <id> [flag...]
-  local data=$1 id=$2
+  local data=$1 id=$2 arg previous_arg=''
+  local -a args=()
   shift 2
-  fm_backlog_mutate "$data" "done" "$id" "$@"
+  for arg in "$@"; do
+    if [ "$previous_arg" = --pr ] && ! fm_backlog_pr_flag_supported "$arg"; then
+      args[${#args[@]}-1]=--note
+      arg="MR $arg"
+    fi
+    args+=("$arg")
+    previous_arg=$arg
+  done
+  fm_backlog_mutate "$data" "done" "$id" "${args[@]+"${args[@]}"}"
 }
 
 fm_backlog_row_artifact_supported() {
@@ -550,7 +578,9 @@ fm_backlog_retain() {  # <data-dir> <id> [flag...]
         ;;
       --pr)
         deliverable="${deliverable:+$deliverable; }PR $arg"
-        row_args=(--pr "$arg")
+        if fm_backlog_pr_flag_supported "$arg"; then
+          row_args=(--pr "$arg")
+        fi
         ;;
       --note) deliverable="${deliverable:+$deliverable; }$arg" ;;
     esac
