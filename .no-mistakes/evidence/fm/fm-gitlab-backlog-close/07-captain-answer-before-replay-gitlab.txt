@@ -1,0 +1,37 @@
+### $ bin/fm-teardown.sh ai-chat-143-itests --force   (treehouse fails -> cleanup interrupted after the pending close is recorded)
+error: treehouse return failed for worktree /private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-captain-hold.AxBm63/captain-answer-before-replay-gitlab/projects/ai-chat-143-itests; teardown aborted
+### exit=1
+--- state/ai-chat-143-itests.backlog-close ---
+id=ai-chat-143-itests
+data=/private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-captain-hold.AxBm63/captain-answer-before-replay-gitlab/data
+spawn_gen=fixture-ai-chat-143-itests
+cleanup_incomplete=0
+mode=retain
+arg=--pr
+arg=https://git.ksb-intax.app/rnd/ai-chat/-/merge_requests/75
+### row before answer:
+  state: in_flight
+  held: yes
+  links: none
+  body: "Captain hold set: 2026-09-10T21:50:28Z"
+### $ fm-captain-hold.sh answer ai-chat-143-itests   (before any session-start replay)
+answered: ai-chat-143-itests
+### exit=0
+### tasks-axi calls made by the answer:
+tasks-axi update --help
+tasks-axi update ai-chat-143-itests --body-file /var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T//fm-captain-hold-body.AduarT --archive-body --file /private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-captain-hold.AxBm63/captain-answer-before-replay-gitlab/data/backlog.md
+tasks-axi done ai-chat-143-itests --note MR https://git.ksb-intax.app/rnd/ai-chat/-/merge_requests/75 --file /private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-captain-hold.AxBm63/captain-answer-before-replay-gitlab/data/backlog.md
+tasks-axi update ai-chat-143-itests --body-file /var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T//fm-captain-hold-normalize.vdgPGL --file /private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-captain-hold.AxBm63/captain-answer-before-replay-gitlab/data/backlog.md
+### row after answer:
+  state: done
+  held: no
+  links: none
+  body: "Resolution recorded by fm-captain-hold.\nDecision digest: 913f3c040fd87577d3ac29bfc9a9eaa484e8e7817572cbdd69a8cf9096c16e3f\nResolution mode: answered\n\nCaptain decision:\nProceed with the merged result.\nMR https://git.ksb-intax.app/rnd/ai-chat/-/merge_requests/75"
+### marker after answer: PRESENT
+### replay at next session start (bootstrap):
+(no backlog-related output)
+### row after replay:
+  state: done
+  held: no
+  body: "Resolution recorded by fm-captain-hold.\nDecision digest: 913f3c040fd87577d3ac29bfc9a9eaa484e8e7817572cbdd69a8cf9096c16e3f\nResolution mode: answered\n\nCaptain decision:\nProceed with the merged result.\nMR https://git.ksb-intax.app/rnd/ai-chat/-/merge_requests/75"
+### marker after replay: absent

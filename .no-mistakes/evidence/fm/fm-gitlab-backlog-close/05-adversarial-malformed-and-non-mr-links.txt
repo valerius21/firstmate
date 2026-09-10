@@ -1,0 +1,26 @@
+### [malformed-target] meta pr=not-a-url-at-all
+### [malformed-target] $ bin/fm-teardown.sh ai-chat-junk-1
+error: the pending backlog close for ai-chat-junk-1 could not be recorded (invalid pending-close arguments in /private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-backlog-atomicity.DJ157D/pr-malformed-target/home/state/.ai-chat-junk-1.backlog-close.25770); retaining every durable task record
+### exit=1
+### [malformed-target] row state: in_flight   marker: absent
+### [malformed-target] tasks-axi show --full (links/body):
+  state: in_flight
+  links: none
+  body: ""
+### [malformed-target] Done section of data/backlog.md:
+## Done
+
+### [gitlab-self-hosted-issue] meta pr=https://git.ksb-intax.app/rnd/ai-chat/-/issues/12
+### [gitlab-self-hosted-issue] $ bin/fm-teardown.sh ai-chat-issue-1
+teardown ai-chat-issue-1 complete (window firstmate:fm-ai-chat-issue-1, worktree /private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-backlog-atomicity.wmfwLq/pr-gitlab-self-hosted-issue/wt)
+Backlog: ai-chat-issue-1 is closed in /private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-backlog-atomicity.wmfwLq/pr-gitlab-self-hosted-issue/home/data/backlog.md. Run tasks-axi ready for dependency-cleared candidates, check date gates, and dispatch only work whose blockers are gone and date is due.
+### exit=0
+### [gitlab-self-hosted-issue] row state: done   marker: absent
+### [gitlab-self-hosted-issue] tasks-axi show --full (links/body):
+  state: done
+  links: none
+  body: "MR https://git.ksb-intax.app/rnd/ai-chat/-/issues/12"
+### [gitlab-self-hosted-issue] Done section of data/backlog.md:
+## Done
+- [x] ai-chat-issue-1 - item for ai-chat-issue-1 (kind: ship) (done 2026-09-10)
+  MR https://git.ksb-intax.app/rnd/ai-chat/-/issues/12

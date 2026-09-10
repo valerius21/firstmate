@@ -1,0 +1,14 @@
+== tests/fm-backlog-atomicity.test.sh (targeted) ==
+ok - completion records a GitLab merge-request link in the item body
+ok - recovery closes a pending close carrying a GitLab merge-request link
+ok - dispatch and completion transition structurally with evidence
+ok - recovery rejects malformed PR URL values
+ok - recovery rejects close-marker arguments outside its protocol
+atomicity exit=0
+== tests/fm-captain-hold-lifecycle.test.sh (targeted) ==
+ok - an answer before cleanup replay skips a GitLab merge-request artifact
+ok - an answer before cleanup replay preserves the retained report
+ok - an interrupted cleanup keeps the captain call recoverable and session start retains it
+ok - release and scout report retention distinguish deliveries from rejected merge answers
+ok - an unusable pending-close record names its reason instead of a bare refusal
+captain-hold exit=0

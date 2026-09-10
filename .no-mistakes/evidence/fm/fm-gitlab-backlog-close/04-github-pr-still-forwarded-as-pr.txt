@@ -1,0 +1,27 @@
+### [github-base] meta pr=https://github.com/rnd/ai-chat/pull/75
+### [github-base] $ bin/fm-teardown.sh ai-chat-gh-1
+teardown ai-chat-gh-1 complete (window firstmate:fm-ai-chat-gh-1, worktree /private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-backlog-atomicity.dKo71D/pr-github-base/wt)
+Backlog: ai-chat-gh-1 is closed in /private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-backlog-atomicity.dKo71D/pr-github-base/home/data/backlog.md. Run tasks-axi ready for dependency-cleared candidates, check date gates, and dispatch only work whose blockers are gone and date is due.
+### exit=0
+### [github-base] row state: done   marker: absent
+### [github-base] tasks-axi show --full (links/body):
+  state: done
+  links: "pr:https://github.com/rnd/ai-chat/pull/75"
+  body: ""
+### [github-base] Done section of data/backlog.md:
+## Done
+- [x] ai-chat-gh-1 - item for ai-chat-gh-1 https://github.com/rnd/ai-chat/pull/75 (kind: ship) (merged 2026-09-10)
+
+### [github-target] meta pr=https://github.com/rnd/ai-chat/pull/75
+### [github-target] $ bin/fm-teardown.sh ai-chat-gh-1
+teardown ai-chat-gh-1 complete (window firstmate:fm-ai-chat-gh-1, worktree /private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-backlog-atomicity.2Jm2mn/pr-github-target/wt)
+Backlog: ai-chat-gh-1 is closed in /private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-backlog-atomicity.2Jm2mn/pr-github-target/home/data/backlog.md. Run tasks-axi ready for dependency-cleared candidates, check date gates, and dispatch only work whose blockers are gone and date is due.
+### exit=0
+### [github-target] row state: done   marker: absent
+### [github-target] tasks-axi show --full (links/body):
+  state: done
+  links: "pr:https://github.com/rnd/ai-chat/pull/75"
+  body: ""
+### [github-target] Done section of data/backlog.md:
+## Done
+- [x] ai-chat-gh-1 - item for ai-chat-gh-1 https://github.com/rnd/ai-chat/pull/75 (kind: ship) (merged 2026-09-10)

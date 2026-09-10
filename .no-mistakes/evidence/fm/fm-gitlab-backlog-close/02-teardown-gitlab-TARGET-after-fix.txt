@@ -1,0 +1,40 @@
+### [target] state before teardown: in_flight
+### [target] $ bin/fm-teardown.sh ai-chat-mr75-ci
+/private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-backlog-atomicity.1u1b21/teardown-target/project: already current
+teardown ai-chat-mr75-ci complete (window firstmate:fm-ai-chat-mr75-ci, worktree /private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-backlog-atomicity.1u1b21/teardown-target/wt)
+Backlog: ai-chat-mr75-ci is closed in /private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-backlog-atomicity.1u1b21/teardown-target/home/data/backlog.md. Run tasks-axi ready for dependency-cleared candidates, check date gates, and dispatch only work whose blockers are gone and date is due.
+### exit=0
+### [target] row state after teardown: done
+### [target] pending-close marker:
+ls: /private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-backlog-atomicity.1u1b21/teardown-target/home/state/ai-chat-mr75-ci.backlog-close: No such file or directory
+### [target] second session start (bootstrap reconcile):
+(no backlog-related output)
+### [target] row state after bootstrap: done
+### [target] marker after bootstrap: absent
+### [target] tasks-axi show ai-chat-mr75-ci --full:
+task:
+  id: ai-chat-mr75-ci
+  title: item for ai-chat-mr75-ci
+  state: done
+  blocked: no
+  blocked_by: none
+  held: no
+  hold_reason: "-"
+  hold_kind: "-"
+  hold_until: "-"
+  kind: ship
+  repo: "-"
+  priority: "-"
+  created: "-"
+  closed: 2026-09-10
+  deps: none
+  links: none
+  body: "MR https://git.ksb-intax.app/rnd/ai-chat/-/merge_requests/75"
+### [target] data/backlog.md:
+# Backlog
+
+## In flight
+## Queued
+## Done
+- [x] ai-chat-mr75-ci - item for ai-chat-mr75-ci (kind: ship) (done 2026-09-10)
+  MR https://git.ksb-intax.app/rnd/ai-chat/-/merge_requests/75

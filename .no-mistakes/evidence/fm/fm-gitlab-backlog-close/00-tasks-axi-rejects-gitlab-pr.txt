@@ -1,0 +1,13 @@
+$ tasks-axi update ai-chat-mr75-ci --pr https://git.ksb-intax.app/rnd/ai-chat/-/merge_requests/75
+error: "--pr must be an http(s) pull request URL ending in /pull/<number>"
+code: VALIDATION_ERROR
+exit=2
+$ tasks-axi done ai-chat-mr75-ci --pr https://git.ksb-intax.app/rnd/ai-chat/-/merge_requests/75
+error: Task pr link must be an http(s) pull request URL ending in /pull/<number>
+code: VALIDATION_ERROR
+exit=2
+$ tasks-axi done ai-chat-mr75-ci --pr https://github.com/o/r/pull/75
+ok: done ai-chat-mr75-ci -> Done (pr https://github.com/o/r/pull/75)
+help[1]:
+  - Run `tasks-axi ready --file=/tmp/nm-gitlab-stE6Q9/repro/backlog.md` to dispatch work unblocked by this
+exit=0

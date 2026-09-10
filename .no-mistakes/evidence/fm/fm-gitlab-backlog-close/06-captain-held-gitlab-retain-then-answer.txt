@@ -1,0 +1,39 @@
+### $ bin/fm-teardown.sh ai-chat-139-ratelimit-reset --force   (captain-held, pr=https://git.ksb-intax.app/rnd/ai-chat/-/merge_requests/75)
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+●  WATCHER DOWN - SUPERVISION IS OFF
+●  1 task(s) in flight, but no watcher has a fresh beacon (last beat: never, grace 300s).
+●  Trust the emitted supervision protocol for this harness; do not use shell & for watcher repair.
+●  This is a supervision warning only; the guarded operation WILL still run.
+●  watcher supervision needs Stop-owned automatic recovery; inspect the hook registration and startup status before ending the turn.
+●━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+teardown ai-chat-139-ratelimit-reset complete (window firstmate:fm-ai-chat-139-ratelimit-reset, worktree /private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-captain-hold.UhdVJe/captain-retain-gitlab/projects/ai-chat-139-ratelimit-reset)
+Backlog: ai-chat-139-ratelimit-reset stays open in /private/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T/fm-captain-hold.UhdVJe/captain-retain-gitlab/data/backlog.md, still held for the captain with its deliverable recorded. Relay the question and close it only with bin/fm-captain-hold.sh answer.
+### exit=0
+### marker: absent
+### tasks-axi show ai-chat-139-ratelimit-reset --full (after teardown, before answer):
+  state: queued
+  held: yes
+  hold_kind: captain
+  links: none
+  body: "Captain hold set: 2026-09-10T21:49:11Z\n\nDeliverable of the finished work: PR https://git.ksb-intax.app/rnd/ai-chat/-/merge_requests/75"
+### $ fm-captain-hold.sh answer ai-chat-139-ratelimit-reset
+answered: ai-chat-139-ratelimit-reset
+### exit=0
+### tasks-axi show ai-chat-139-ratelimit-reset --full (after answer):
+  state: done
+  held: no
+  hold_kind: captain
+  links: none
+  body: "Resolution recorded by fm-captain-hold.\nDecision digest: 913f3c040fd87577d3ac29bfc9a9eaa484e8e7817572cbdd69a8cf9096c16e3f\nResolution mode: answered\n\nCaptain decision:\nProceed with the merged result.\n\nDeliverable of the finished work: PR https://git.ksb-intax.app/rnd/ai-chat/-/merge_requests/75"
+### data/backlog.md Done section:
+## Done
+- [x] ai-chat-139-ratelimit-reset - Ship the merge request (repo: sample) (kind: ship) (done 2026-09-10) (hold: captain must choose after the merge request) (hold-kind: captain)
+  Resolution recorded by fm-captain-hold.
+  Decision digest: 913f3c040fd87577d3ac29bfc9a9eaa484e8e7817572cbdd69a8cf9096c16e3f
+  Resolution mode: answered
+
+  Captain decision:
+  Proceed with the merged result.
+
+  Deliverable of the finished work: PR https://git.ksb-intax.app/rnd/ai-chat/-/merge_requests/75
+
