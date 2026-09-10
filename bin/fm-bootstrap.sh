@@ -65,13 +65,16 @@
 #          origin whose host passes bin/fm-pr-lib.sh's GitLab host rule: any
 #          DNS host but literally github.com counts as GitLab, so a GitHub SSH
 #          alias (git@github-work:o/r.git) or another forge also triggers the
-#          line. Such a home may ignore it or silence it by installing glab; a
-#          home with only github.com, file, or no origins is never told to.
+#          line. Such a home may ignore it; a home with only github.com, file,
+#          or no origins is never told to.
 #          Once glab is installed, the network phase runs
 #          `glab auth status --hostname <host>` for each distinct such host and
 #          prints one NEEDS_GLAB_AUTH line per host whose probe fails, bounded
-#          by FM_GLAB_AUTH_TIMEOUT seconds (default 15) with no prompt; an
-#          unreachable instance fails the same way, like gh offline.
+#          at 15 seconds with no prompt; an unreachable instance fails the same
+#          way, like gh offline. The alias home therefore sees one
+#          NEEDS_GLAB_AUTH line per start for that host instead of MISSING,
+#          which it may likewise ignore: only a genuine GitLab host gates
+#          dispatch (bootstrap-diagnostics owns that distinction).
 #          tasks-axi and quota-axi are required bootstrap tools (same class as
 #          lavish-axi). A compatible tasks-axi default backend is silent.
 #          quota-axi is required for the agent-owned dispatch-profile array
@@ -931,7 +934,7 @@ glab_auth_check() {
   command -v glab >/dev/null 2>&1 || return 0
   while IFS= read -r host; do
     [ -n "$host" ] || continue
-    fm_run_timed "${FM_GLAB_AUTH_TIMEOUT:-15}" glab auth status --hostname "$host" \
+    fm_run_timed 15 glab auth status --hostname "$host" \
       >/dev/null 2>&1 </dev/null || echo "NEEDS_GLAB_AUTH: $host"
   done <<< "$(gitlab_origin_hosts)"
 }

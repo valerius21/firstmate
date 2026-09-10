@@ -27,9 +27,10 @@ When any diagnostic needs captain attention, report the plain consequence and re
 - `BACKEND_INVALID: <name> (known: <names>)` - the resolved runtime backend has no verified dependency or lifecycle contract, so do not dispatch work until the invalid `FM_BACKEND` or `config/backend` value is corrected to one of the listed backends.
 - `NEEDS_GH_AUTH` - ask the captain to run `! gh auth login` (interactive; you cannot run it for them).
   This probe now arrives from the deferred network stage, so it is also how an unreachable network shows up: `gh` cannot validate its token offline and reports the same failure. Confirm reachability before asking the captain to re-authenticate a credential that may be fine.
-- `NEEDS_GLAB_AUTH: <host>` - ask the captain to run `! glab auth login --hostname <host>` (interactive; you cannot run it for them), once per listed host.
+- `NEEDS_GLAB_AUTH: <host>` - first confirm the named host really is a GitLab instance, for example by reading that clone's origin URL or the host's `/api/v4/version`; bootstrap treats every non-`github.com` origin host as GitLab, so a GitHub SSH alias or another forge legitimately produces this line and you may ignore it for that host.
+  For a genuine GitLab host, ask the captain to run `! glab auth login --hostname <host>` (interactive; you cannot run it for them), once per listed host.
   Like `NEEDS_GH_AUTH`, this probe runs in the deferred network stage, and an unreachable or timed-out instance fails exactly the same way as a missing or rejected token, so confirm the instance is reachable before asking the captain to re-authenticate.
-  Do not dispatch work on a project whose origin host is listed until the line clears.
+  Do not dispatch work on a project whose origin is a genuine GitLab host listed here until `glab auth login --hostname <host>` succeeds and the line clears.
 - `NETWORK_CHECKS: <what did not complete>; rerun <command>` - the deferred network stage itself could not finish, so the checks it names are simply unknown, not failed.
   Rerun the printed command; it is idempotent and re-derives every finding.
   A `hit the ...s bound` line means one of those checks is slow or unreachable - most often a remote secondmate host - and the stage stopped rather than letting it wedge; a `lock was no longer held` line means the session that asked for the sweeps no longer owns them, so leave them to the session that does.
