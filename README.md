@@ -60,8 +60,7 @@ Full detail on every feature lives in [docs/architecture.md](docs/architecture.m
 
 - A verified primary agent harness: Claude Code, Grok, Pi, `pi-signed`, Oh My Pi (`omp`), Codex, OpenCode, or Cursor Agent CLI.
 - Git and the GitHub CLI, authenticated through `gh auth login`.
-- For projects hosted on GitLab, including self-hosted instances, the GitLab CLI `glab`, authenticated for each instance with `glab auth login --hostname <host>`; set `GITLAB_HOST=<host>` when calling `glab api`, and clone over HTTPS with `git config credential.helper '!glab auth git-credential'` when the instance offers no SSH.
-  Merge-request watching and merging already work on any instance ([docs/gitlab-merge-watch.md](docs/gitlab-merge-watch.md)), and the toolchain rules live in [docs/configuration.md](docs/configuration.md).
+- For projects hosted on GitLab, including self-hosted instances, the GitLab CLI `glab`, authenticated for each instance with `glab auth login --hostname <host>`; the "Toolchain" section of [docs/configuration.md](docs/configuration.md) owns the rest of the GitLab setup.
 - The CLI and dependencies for your selected runtime backend; tmux is the reference default.
 
 The first mate detects and offers to install supported missing tools after you approve.
