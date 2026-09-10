@@ -323,6 +323,39 @@ test_faster_paths_use_configured_authority_without_stacked_review() {
   pass "fm-brief.sh: faster paths use configured authority without stacked review"
 }
 
+# The scaffold is written before the task worktree exists, so it cannot know the
+# forge; every generated brief must instead tell the worker to decide from its
+# origin remote, with gh-axi for GitHub and glab for GitLab, and the direct-PR
+# ready line must accept a merge-request URL. Asserted on generated output only.
+test_briefs_are_forge_neutral() {
+  local home id brief
+  home="$TMP_ROOT/forge-neutral-home"
+  write_registry "$home"
+  for id in brief-forge-ship-a5:no-mistakes brief-forge-direct-a5:direct-PR brief-forge-local-a5:local-only brief-forge-scout-a5:scout; do
+    if [ "${id##*:}" = scout ]; then
+      FM_HOME="$home" "$ROOT/bin/fm-brief.sh" "${id%%:*}" some-proj --scout >/dev/null 2>&1
+    else
+      FM_HOME="$home" "$ROOT/bin/fm-brief.sh" "${id%%:*}" some-proj --mode "${id##*:}" >/dev/null 2>&1
+    fi
+    brief="$home/data/${id%%:*}/brief.md"
+    # shellcheck disable=SC2016 # Backticks are literal brief prose, not command substitution.
+    assert_grep '3. Read `git remote get-url origin` to pick the forge tool: gh-axi on a github.com origin, `glab` on a' "$brief" \
+      "${id%%:*}: rule 3 must route forge operations by the origin remote"
+    assert_grep 'GITLAB_HOST=<host>' "$brief" "${id%%:*}: rule 3 must tell a GitLab worker how to address glab api"
+    assert_grep 'Use chrome-devtools-axi for browser operations' "$brief" "${id%%:*}: rule 3 lost the browser tool"
+    assert_no_grep 'Use gh-axi for GitHub operations' "$brief" "${id%%:*}: rule 3 still hard-codes GitHub"
+  done
+  brief="$home/data/brief-forge-direct-a5/brief.md"
+  # shellcheck disable=SC2016 # Backticks are literal brief prose, not command substitution.
+  assert_grep 'open a PR with `gh-axi` on a github.com origin or a merge request with `glab mr create` on a GitLab origin' "$brief" \
+    "direct-PR definition of done must name the GitLab path"
+  assert_grep '{url} is the PR or merge-request URL exactly as the forge printed it' "$brief" \
+    "direct-PR ready line must accept a merge-request URL"
+  # shellcheck disable=SC2016 # Backticks are literal brief prose, not command substitution.
+  assert_grep 'append `done: PR {url}`' "$brief" "direct-PR ready line format changed"
+  pass "fm-brief.sh: briefs route forge operations by origin remote (gh-axi or glab)"
+}
+
 # Pin the specific line the bug lived on: the no-mistakes DOD's no-mistakes
 # reference must render as plain prose with no dangling apostrophe artifact.
 test_no_mistakes_dod_wording() {
@@ -877,6 +910,7 @@ test_ship_mode_is_required_and_closed_set
 test_ship_mode_is_explicit_not_registry
 test_delivery_flags_are_refused_where_they_do_not_apply
 test_faster_paths_use_configured_authority_without_stacked_review
+test_briefs_are_forge_neutral
 test_no_mistakes_dod_wording
 test_ask_user_escalation_format
 test_ship_project_memory_wording

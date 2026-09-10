@@ -116,6 +116,7 @@ Set the local, gitignored `config/backlog-backend` file to `manual` to force man
 A `manual` home owns its backlog file outright: the lifecycle transitions above are skipped there, dispatch and completion never fail over the file's contents, and a completed teardown prints the hand edit that is owed instead.
 Absent or `tasks-axi` selects the tasks-axi path.
 On the default markdown adapter, tasks-axi and manual edits produce the same `## In flight`, `## Queued`, and `## Done` sections.
+The tasks-axi `--pr` flag accepts GitHub pull-request URLs only, so record a GitLab merge-request URL in the item body instead; the task's own `pr=` metadata still carries it for watching and merging.
 
 ## Runtime backend (config/backend / FM_BACKEND)
 
@@ -456,6 +457,9 @@ When Relay is opted in, bootstrap also requires `curl` and `jq` before arming th
 `tasks-axi` and `quota-axi` are required bootstrap tools in every profile, the same class as `lavish-axi`.
 An absent or incompatible `tasks-axi` reports `MISSING: tasks-axi (install: npm install -g tasks-axi)`; when `config/backlog-backend` is not `manual`, a home with a configured non-markdown adapter or a markdown backlog refuses lifecycle mutation until compatible `tasks-axi` is on `PATH`, while a manual-backend home keeps its backlog hand-edited.
 An absent or incompatible `gh-axi` reports `MISSING: gh-axi (install: npm install -g gh-axi && gh-axi setup hooks)`.
+GitLab projects, including self-hosted instances, are supported alongside GitHub: while any clone under `projects/` has a GitLab origin, bootstrap also requires the GitLab CLI and reports `MISSING: glab (install: brew install glab  # or the platform's package manager)`; a home with only GitHub or local origins is never asked for it.
+Bootstrap does not check GitLab login, so authenticate each instance yourself with `glab auth login --hostname <host>`, set `GITLAB_HOST=<host>` for `glab api` calls, and give HTTPS clones `credential.helper='!glab auth git-credential'` when the instance offers no SSH.
+Workers pick `gh-axi` or `glab` from the project's origin remote, and merge-request watching and merging are verified in [gitlab-merge-watch.md](gitlab-merge-watch.md).
 An absent or incompatible `lavish-axi` reports `MISSING: lavish-axi (install: npm install -g lavish-axi && lavish-axi setup hooks)`.
 An absent or too-old `quota-axi` reports `MISSING: quota-axi (install: npm install -g quota-axi)`; firstmate cannot resolve a profile array without a compatible binary.
 Bootstrap also reports a `TANGLE:` line when `FM_ROOT` is on a named non-default branch; follow the printed checkout remediation rather than treating it as an installable tool problem.

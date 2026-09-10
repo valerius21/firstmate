@@ -62,12 +62,13 @@ A `local-only` project may have no remote and skips no-mistakes initialization.
 
 ## Create a project
 
-Creating a GitHub repository is outward-facing.
-Before making that remote change, propose the repository name, owner or organization, visibility, and delivery posture, defaulting visibility to private and the posture to `no-mistakes-prod-only`, then obtain the captain's explicit consent for those exact values; a stated default never replaces that consent.
+Creating a GitHub or GitLab repository is outward-facing.
+Before making that remote change, propose the repository name, owner, organization, or group, visibility, and delivery posture, defaulting visibility to private and the posture to `no-mistakes-prod-only`, then obtain the captain's explicit consent for those exact values; a stated default never replaces that consent.
 Use `gh-axi` for the approved GitHub operation and consult its current help rather than relying on remembered flags.
+When the captain names a GitLab host or the project is meant for GitLab, create it with `glab repo create` against that host instead, after the same consent, and consult current `glab repo create --help` rather than remembered flags; `glab` must already be authenticated for that instance (README "Requirements").
 After remote creation succeeds, clone it locally, add the registry entry, and initialize it according to its delivery posture.
 
-For a purely `local-only` project, create a local Git repository under its unused `projects/<name>` path, add the registry entry, and make no GitHub call.
+For a purely `local-only` project, create a local Git repository under its unused `projects/<name>` path, add the registry entry, and make no forge call.
 The captain's request to create that local project authorizes this local initialization, but it does not authorize an unmentioned remote repository.
 
 ## Initialize
