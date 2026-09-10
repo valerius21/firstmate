@@ -545,7 +545,7 @@ fm_backlog_done() {  # <data-dir> <id> [flag...]
 fm_backlog_row_artifact_supported() {
   local id=$1 flag=${2:-} value=${3:-}
   case "$flag" in
-    --pr) return 0 ;;
+    --pr) fm_backlog_pr_flag_supported "$value" ;;
     --report) [ "$value" = "data/$id/report.md" ] ;;
     *) return 1 ;;
   esac
@@ -578,7 +578,7 @@ fm_backlog_retain() {  # <data-dir> <id> [flag...]
         ;;
       --pr)
         deliverable="${deliverable:+$deliverable; }PR $arg"
-        if fm_backlog_pr_flag_supported "$arg"; then
+        if fm_backlog_row_artifact_supported "$id" --pr "$arg"; then
           row_args=(--pr "$arg")
         fi
         ;;

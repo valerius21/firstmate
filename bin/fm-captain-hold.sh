@@ -896,6 +896,7 @@ report_retained_artifact_failure() {  # <task-id> <marker-path>
 apply_pending_retained_artifact() {  # <task-id>
   local id=$1 marker
   local -a args=()
+  PENDING_CLOSE_ARGS=()
   marker=$(fm_backlog_close_marker_path "$STATE" "$id") || return 1
   [ -e "$marker" ] || [ -L "$marker" ] || return 0
   fm_backlog_close_marker_validate "$marker" "$DATA" "$id" "$STATE" \
@@ -904,9 +905,12 @@ apply_pending_retained_artifact() {  # <task-id>
   args=("${FM_BACKLOG_CLOSE_VALIDATED_ARGS[@]+"${FM_BACKLOG_CLOSE_VALIDATED_ARGS[@]}"}")
   case "${args[0]-}" in
     --pr|--report)
-      fm_backlog_row_artifact_supported "$id" "${args[@]}" || return 0
-      fm_backlog_mutate "$DATA" update "$id" "${args[@]}" \
-        || { report_retained_artifact_failure "$id" "$marker"; return 1; }
+      if fm_backlog_row_artifact_supported "$id" "${args[@]}"; then
+        fm_backlog_mutate "$DATA" update "$id" "${args[@]}" \
+          || { report_retained_artifact_failure "$id" "$marker"; return 1; }
+      elif [ "${args[0]}" = --pr ]; then
+        PENDING_CLOSE_ARGS=("${args[@]}")
+      fi
       ;;
   esac
 }
@@ -916,7 +920,12 @@ close_answered() {  # <task-id> <release-0-or-1>
     tasks_axi unhold "$1" >/dev/null
   else
     apply_pending_retained_artifact "$1" || return 1
-    tasks_axi "done" "$1" >/dev/null
+    if [ "${#PENDING_CLOSE_ARGS[@]}" -gt 0 ]; then
+      fm_backlog_done "$DATA" "$1" "${PENDING_CLOSE_ARGS[@]}" \
+        || { printf 'fm-captain-hold: %s\n' "$FM_BACKLOG_TRANSITION_ERROR" >&2; return 1; }
+    else
+      tasks_axi "done" "$1" >/dev/null
+    fi
   fi
 }
 
