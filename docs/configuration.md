@@ -116,7 +116,7 @@ Set the local, gitignored `config/backlog-backend` file to `manual` to force man
 A `manual` home owns its backlog file outright: the lifecycle transitions above are skipped there, dispatch and completion never fail over the file's contents, and a completed teardown prints the hand edit that is owed instead.
 Absent or `tasks-axi` selects the tasks-axi path.
 On the default markdown adapter, tasks-axi and manual edits produce the same `## In flight`, `## Queued`, and `## Done` sections.
-The tasks-axi `--pr` flag accepts GitHub pull-request URLs only, so record a GitLab merge-request URL in the item body instead; the task's own `pr=` metadata still carries it for watching and merging.
+The tasks-axi `--pr` flag accepts GitHub pull-request URLs only, so the lifecycle transitions carry a GitLab merge-request URL into the item body automatically as an `MR <url>` line instead of passing `--pr`; the task's own `pr=` metadata still carries it for watching and merging ([`bin/fm-backlog-transition-lib.sh`](../bin/fm-backlog-transition-lib.sh) "FORGE LINKS").
 
 ## Runtime backend (config/backend / FM_BACKEND)
 
