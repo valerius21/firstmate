@@ -893,6 +893,11 @@ report_retained_artifact_failure() {  # <task-id> <marker-path>
     "$1" "$2" "${FM_BACKLOG_TRANSITION_ERROR:-no reason reported}" >&2
 }
 
+# Applies a validated retain-mode pending-close record ahead of the answer's
+# close: a row artifact tasks-axi `update` accepts is written here, while a
+# `--pr` it cannot hold (a GitLab merge-request link) is handed to close_answered
+# through PENDING_CLOSE_ARGS so fm_backlog_done carries it into the body on the
+# close (bin/fm-backlog-transition-lib.sh FORGE LINKS) instead of dropping it.
 apply_pending_retained_artifact() {  # <task-id>
   local id=$1 marker
   local -a args=()
