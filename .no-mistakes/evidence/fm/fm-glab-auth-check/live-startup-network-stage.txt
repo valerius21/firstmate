@@ -1,0 +1,22 @@
+== deferred network stage end-to-end: bin/fm-startup-network.sh run --locked 0 (real glab, real network)
+rc=0 elapsed=2s
+
+--- state/.startup-network.status ---
+state=done
+pid=65549
+started=1789076863
+finished=1789076865
+rc=0
+locked=0
+phases=probe
+generation=1789076863.65549.manual
+lock_pid=
+report_published=1
+
+--- state/.startup-network.report (what the digest's NETWORK CHECKS section harvests) ---
+NEEDS_GLAB_AUTH: gitlab.com
+
+--- state/.startup-network.timings (glab-auth phase recorded beside gh-auth) ---
+v1	phase	gh-auth	68	374	
+v1	phase	glab-auth	449	1384	
+v1	stage	network-checks	1	1835	probe

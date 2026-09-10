@@ -1,0 +1,29 @@
+== live drive: real glab glab 1.117.0 (44790937b), timeout mechanism: perl
+== origins under projects/:
+  gh-proj -> git@github.com:owner/repo.git
+  gl-com -> https://GitLab.com/group/repo.git
+  gl-com-2 -> git@gitlab.com:group/other.git
+  ksb-proj -> git@git.ksb-intax.app:group/repo.git
+  local-proj -> file:///tmp/whatever.git
+
+== 1. network phase (as the deferred stage invokes it): FM_BOOTSTRAP_NETWORK=only FM_BOOTSTRAP_DETECT_ONLY=1
+rc=0 elapsed=1s
+--- output ---
+NEEDS_GLAB_AUTH: gitlab.com
+--- end ---
+
+== 2. local-only phase (what fm-session-start runs inline): FM_BOOTSTRAP_NETWORK=skip -> must NOT probe glab
+glab lines: [none]
+
+== 3. glab NOT on PATH, network phase -> no NEEDS_GLAB_AUTH (the local phase's MISSING: glab owns that)
+output: [<silent>]
+
+== 4. unreachable GitLab host (DNS never resolves) -> fails like gh offline, bounded
+elapsed=2s
+NEEDS_GLAB_AUTH: gitlab.com
+NEEDS_GLAB_AUTH: gitlab.unreachable.invalid
+
+== 5. hanging glab (fake glab sleeps 60s on auth status) -> probe cut at ~15s, host reported
+elapsed=16s
+NEEDS_GLAB_AUTH: git.ksb-intax.app
+leftover sleeping glab processes after bound: 0
