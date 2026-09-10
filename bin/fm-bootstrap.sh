@@ -7,6 +7,7 @@
 #          Silent = all good.
 #          Lines: "MISSING: <tool> (install: <command>)",
 #                 "MISSING_MANUAL: <tool> (instructions: <url>)", "NEEDS_GH_AUTH",
+#                 "NEEDS_GLAB_AUTH: <host>",
 #                 "BACKEND_INVALID: <name> (known: <names>)",
 #                 "STARTUP_MEMORY_BUDGET: invalid config/startup-memory-budget - <reason>",
 #                 "CREW_DISPATCH: invalid config/crew-dispatch.json - <reason>",
@@ -64,8 +65,16 @@
 #          origin whose host passes bin/fm-pr-lib.sh's GitLab host rule: any
 #          DNS host but literally github.com counts as GitLab, so a GitHub SSH
 #          alias (git@github-work:o/r.git) or another forge also triggers the
-#          line. Such a home may ignore it or silence it by installing glab; a
-#          home with only github.com, file, or no origins is never told to.
+#          line. Such a home may ignore it; a home with only github.com, file,
+#          or no origins is never told to.
+#          Once glab is installed, the network phase runs
+#          `glab auth status --hostname <host>` for each distinct such host and
+#          prints one NEEDS_GLAB_AUTH line per host whose probe fails, bounded
+#          at 15 seconds with no prompt; an unreachable instance fails the same
+#          way, like gh offline. The alias home therefore sees one
+#          NEEDS_GLAB_AUTH line per start for that host instead of MISSING,
+#          which it may likewise ignore: only a genuine GitLab host gates
+#          dispatch (bootstrap-diagnostics owns that distinction).
 #          tasks-axi and quota-axi are required bootstrap tools (same class as
 #          lavish-axi). A compatible tasks-axi default backend is silent.
 #          quota-axi is required for the agent-owned dispatch-profile array
@@ -120,14 +129,15 @@
 #                 step. Unrecognized values fall back here on purpose: a typo
 #                 must never silently skip a safety sweep.
 #            skip - every LOCAL step, and none of the network ones. Skips
-#                 `gh auth status`, secondmate_liveness_sweep, secondmate_sync,
+#                 `gh auth status`, the glab login probes, secondmate_liveness_sweep, secondmate_sync,
 #                 secondmate_handoff_resume, and fleet_sync.
 #            only - ONLY those network steps and nothing else. No tool detection,
 #                 no version floors, no tangle check, no backlog
 #                 reconciliation, no x_mode_setup: those already ran on the
 #                 local pass.
 #          FM_BOOTSTRAP_DETECT_ONLY composes with it unchanged, so `only` plus
-#          detect-only is the read-only `gh auth status` probe on its own.
+#          detect-only is the read-only `gh auth status` probe and the glab
+#          login probes on their own.
 #          bin/fm-startup-network.sh owns the deferral: it runs the `only` phase
 #          in a detached bounded worker and publishes the result. This file stays
 #          the single owner of every sweep, and the split changes only WHEN each
@@ -189,6 +199,8 @@ DATA="${FM_DATA_OVERRIDE:-$FM_HOME/data}"
 # deferred network stage sets, so an ordinary bootstrap run records nothing.
 # shellcheck source=bin/fm-timing-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-timing-lib.sh"
+# shellcheck source=bin/fm-timeout-lib.sh disable=SC1091
+. "$SCRIPT_DIR/fm-timeout-lib.sh"
 
 # Network-phase selection (see the header). An unrecognized value resolves to
 # `all` so a malformed override runs every step rather than silently dropping a
@@ -897,20 +909,35 @@ origin_url_host() {
   printf '%s\n' "$url" | tr '[:upper:]' '[:lower:]'
 }
 
-# True when a clone under projects/ has a GitLab origin per fm-pr-lib.sh's host
-# rule; see the header for why any non-github.com host counts as GitLab.
-gitlab_project_present() {
+# Distinct lowercase GitLab origin hosts among the clones under projects/, one
+# per line, per fm-pr-lib.sh's host rule; see the header for why any
+# non-github.com host counts as GitLab. Empty when there are none.
+gitlab_origin_hosts() {
   local proj url host
-  [ -d "$PROJECTS" ] || return 1
+  [ -d "$PROJECTS" ] || return 0
   for proj in "$PROJECTS"/*; do
     [ -d "$proj" ] || continue
     url=$(git -C "$proj" remote get-url origin 2>/dev/null) || continue
     host=$(origin_url_host "$url") || continue
-    if fm_pr_gitlab_host_valid "$host"; then
-      return 0
-    fi
-  done
-  return 1
+    fm_pr_gitlab_host_valid "$host" && printf '%s\n' "$host"
+  done | sort -u
+}
+
+gitlab_project_present() { [ -n "$(gitlab_origin_hosts)" ]; }
+
+# One NEEDS_GLAB_AUTH line per GitLab origin host whose glab login fails. Only
+# meaningful while glab is installed (a missing glab is the MISSING line). The
+# probe never prompts (stdin closed) and is bounded like the deferred stage's
+# other network work; a timeout counts as a failed login, exactly as an
+# unreachable instance does.
+glab_auth_check() {
+  local host
+  command -v glab >/dev/null 2>&1 || return 0
+  while IFS= read -r host; do
+    [ -n "$host" ] || continue
+    fm_run_timed 15 glab auth status --hostname "$host" \
+      >/dev/null 2>&1 </dev/null || echo "NEEDS_GLAB_AUTH: $host"
+  done <<< "$(gitlab_origin_hosts)"
 }
 
 missing_tool_diagnostic() {
@@ -1580,6 +1607,9 @@ if network_phase; then
   __fm_timing_stamp=$(fm_timing_now_ms)
   gh auth status >/dev/null 2>&1 || echo "NEEDS_GH_AUTH"
   fm_timing_record phase gh-auth "$__fm_timing_stamp"
+  __fm_timing_stamp=$(fm_timing_now_ms)
+  glab_auth_check
+  fm_timing_record phase glab-auth "$__fm_timing_stamp"
 fi
 local_phase && detect_local_config
 

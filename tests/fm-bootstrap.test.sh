@@ -551,6 +551,65 @@ test_glab_required_only_for_gitlab_origins() {
   pass "bootstrap requires glab only for clones with a GitLab origin"
 }
 
+# Once glab is installed, the network phase probes `glab auth status --hostname`
+# once per DISTINCT GitLab origin host and prints one NEEDS_GLAB_AUTH line per
+# failing host; the local-only phase never probes, and the probe never blocks
+# on a prompt. The line is pinned verbatim.
+test_glab_auth_probed_per_gitlab_host() {
+  local case_dir fakebin home out repo calls
+  case_dir="$TMP_ROOT/glab-auth"
+  home="$case_dir/home"
+  calls="$case_dir/glab-calls"
+  mkdir -p "$home/config"
+  printf '%s\n' manual > "$home/config/backlog-backend"
+  fakebin=$(make_fake_toolchain "$case_dir")
+  cat > "$fakebin/glab" <<SH
+#!/usr/bin/env bash
+# auth status --hostname <host>: logged in everywhere but FM_FAKE_GLAB_LOGGED_OUT.
+if [ "\${1:-}" = auth ] && [ "\${2:-}" = status ] && [ "\${3:-}" = --hostname ]; then
+  printf '%s\n' "\$4" >> '$calls'
+  # A prompt would hang here; stdin must already be closed.
+  read -r _ && exit 3
+  [ "\$4" = "\${FM_FAKE_GLAB_LOGGED_OUT:-}" ] && exit 1
+  exit 0
+fi
+exit 0
+SH
+  chmod +x "$fakebin/glab"
+  run_case() {
+    PATH="$fakebin:$BASE_PATH" FM_HOME="$home" FM_ROOT_OVERRIDE="$home" \
+      FM_FAKE_TREEHOUSE_LEASE_HELP=1 "$ROOT/bin/fm-bootstrap.sh" 2>/dev/null
+  }
+  for repo in one two; do
+    git init -q "$home/projects/gitlab-$repo"
+    git -C "$home/projects/gitlab-$repo" remote add origin "https://Git.Example.Test/group/$repo.git"
+  done
+  git init -q "$home/projects/gitlab-three"
+  git -C "$home/projects/gitlab-three" remote add origin git@gitlab.other.test:group/three.git
+  git init -q "$home/projects/github-proj"
+  git -C "$home/projects/github-proj" remote add origin git@github.com:owner/repo.git
+
+  out=$(echo prompt-bait | run_case)
+  [ -z "$out" ] || fail "every GitLab host logged in must stay silent, got: $out"
+  [ "$(sort "$calls" | tr '\n' ' ')" = "git.example.test gitlab.other.test " ] \
+    || fail "expected one probe per distinct GitLab host, never github.com, got: $(tr '\n' ' ' < "$calls")"
+
+  : > "$calls"
+  out=$(FM_FAKE_GLAB_LOGGED_OUT=git.example.test run_case)
+  [ "$out" = "NEEDS_GLAB_AUTH: git.example.test" ] \
+    || fail "a failing glab login must report its host verbatim, got: $out"
+
+  : > "$calls"
+  out=$(FM_FAKE_GLAB_LOGGED_OUT=git.example.test FM_BOOTSTRAP_NETWORK=skip run_case)
+  [ -z "$out" ] || fail "the local-only phase must not probe glab, got: $out"
+  [ ! -s "$calls" ] || fail "the local-only phase must not call glab auth status"
+
+  out=$(FM_FAKE_GLAB_LOGGED_OUT=git.example.test FM_BOOTSTRAP_NETWORK=only FM_BOOTSTRAP_DETECT_ONLY=1 run_case)
+  [ "$out" = "NEEDS_GLAB_AUTH: git.example.test" ] \
+    || fail "the deferred network phase must own the glab probe, got: $out"
+  pass "bootstrap probes glab login once per GitLab host in the network phase"
+}
+
 test_orca_backend_gates_orca_tool_only_when_selected() {
   local case_dir fakebin out missing_orca
   missing_orca="MISSING: orca (install: brew install orca  # or the platform's package manager)"
@@ -1203,6 +1262,7 @@ test_tasks_axi_min_version
 test_quota_axi_min_version
 test_git_is_required_with_supported_install_instruction
 test_glab_required_only_for_gitlab_origins
+test_glab_auth_probed_per_gitlab_host
 test_orca_backend_gates_orca_tool_only_when_selected
 test_session_provider_backends_do_not_require_tmux
 test_session_provider_backends_gate_own_cli_not_tmux
