@@ -1592,7 +1592,7 @@ EOF
   assert_contains "$out" "SESSION START" "the digest did not complete"
   assert_contains "$out" "IN PROGRESS - the deferred network checks have not finished yet." \
     "the digest did not disclose that its network checks were still running"
-  assert_contains "$out" "NOT yet confirmed: GitHub authentication, dead-secondmate relaunch" \
+  assert_contains "$out" "NOT yet confirmed: GitHub and GitLab authentication, dead-secondmate relaunch" \
     "the digest did not name the checks it has not confirmed"
   assert_not_contains "$out" "NEEDS_GH_AUTH" \
     "the digest reported a GitHub-auth verdict it could not yet have"
@@ -1654,7 +1654,7 @@ SH
   out=$(run_session_start "$home" "$root" "$fakebin:$BASE_PATH")
 
   assert_contains "$out" "READ-ONLY SESSION" "the read-only fixture did not actually refuse the lock"
-  assert_contains "$out" "skipped (read-only session) - GitHub authentication" \
+  assert_contains "$out" "skipped (read-only session) - GitHub and GitLab authentication" \
     "a read-only session did not declare its skipped network checks"
   assert_absent "$home/state/.startup-network.status" \
     "a read-only session started the deferred stage it has no authority for"
