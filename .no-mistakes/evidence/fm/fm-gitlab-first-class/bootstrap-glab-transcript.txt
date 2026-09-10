@@ -1,0 +1,51 @@
+# fm-bootstrap.sh live run: glab requirement vs. origin hosts  (2026-09-10T14:14:55Z)
+# glab on PATH: no (fakebin + /usr/bin:/bin:/usr/sbin:/sbin only)
+== S1 GitHub-only home (scp, https, ssh+port, upper-case, file://, origin-less, underscore host, stray file) -> expect silence
+   origins: [git@my_host:owner/repo.git] [file:///var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T//fm-glab-live.iOOXP4/home/remotes/x.git] [https://github.com/owner/repo.git] [git@github.com:owner/repo.git] [ssh://git@github.com:22/owner/repo.git] [https://GitHub.COM/owner/repo.git] [none] 
+   exit=0
+   stdout: <empty>
+   stderr: fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+== S2 captain's self-hosted GitLab scp origin -> expect MISSING: glab
+   origins: [git@my_host:owner/repo.git] [file:///var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T//fm-glab-live.iOOXP4/home/remotes/x.git] [https://github.com/owner/repo.git] [git@github.com:owner/repo.git] [ssh://git@github.com:22/owner/repo.git] [https://GitHub.COM/owner/repo.git] [git@git.ksb-intax.app:ksb/ai-chat.git] [none] 
+   exit=0
+   stdout: MISSING: glab (install: brew install glab  # or the platform's package manager)
+   stderr: fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+== S3 https mixed-case self-hosted host, no 'gitlab' in name -> expect MISSING: glab
+   origins: [git@my_host:owner/repo.git] [file:///var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T//fm-glab-live.iOOXP4/home/remotes/x.git] [https://github.com/owner/repo.git] [git@github.com:owner/repo.git] [ssh://git@github.com:22/owner/repo.git] [https://GitHub.COM/owner/repo.git] [https://Git.Example.Test/group/sub/proj.git] [none] 
+   exit=0
+   stdout: MISSING: glab (install: brew install glab  # or the platform's package manager)
+   stderr: fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+== S4 ssh:// with port -> expect MISSING: glab
+   origins: [git@my_host:owner/repo.git] [file:///var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T//fm-glab-live.iOOXP4/home/remotes/x.git] [https://github.com/owner/repo.git] [git@github.com:owner/repo.git] [ssh://git@github.com:22/owner/repo.git] [https://GitHub.COM/owner/repo.git] [ssh://git@git.example.test:2222/group/proj.git] [none] 
+   exit=0
+   stdout: MISSING: glab (install: brew install glab  # or the platform's package manager)
+   stderr: fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+== S5 https with user:token@ credential in URL -> expect MISSING: glab
+   origins: [git@my_host:owner/repo.git] [file:///var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T//fm-glab-live.iOOXP4/home/remotes/x.git] [https://github.com/owner/repo.git] [git@github.com:owner/repo.git] [ssh://git@github.com:22/owner/repo.git] [https://GitHub.COM/owner/repo.git] [https://oauth2:tok@gitlab.com/group/proj.git] [none] 
+   exit=0
+   stdout: MISSING: glab (install: brew install glab  # or the platform's package manager)
+   stderr: fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+== S6 ADVERSARIAL GitHub SSH alias host -> documented false positive: expect MISSING: glab
+   origins: [git@my_host:owner/repo.git] [file:///var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T//fm-glab-live.iOOXP4/home/remotes/x.git] [git@github-work:owner/repo.git] [https://github.com/owner/repo.git] [git@github.com:owner/repo.git] [ssh://git@github.com:22/owner/repo.git] [https://GitHub.COM/owner/repo.git] [none] 
+   exit=0
+   stdout: MISSING: glab (install: brew install glab  # or the platform's package manager)
+   stderr: fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+# now linking the real glab (/opt/homebrew/bin/glab, glab 1.117.0 (44790937b)) into PATH
+== S7 GitLab origin present AND real glab on PATH -> expect silence
+   origins: [git@my_host:owner/repo.git] [file:///var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T//fm-glab-live.iOOXP4/home/remotes/x.git] [https://github.com/owner/repo.git] [git@github.com:owner/repo.git] [ssh://git@github.com:22/owner/repo.git] [https://GitHub.COM/owner/repo.git] [git@git.ksb-intax.app:ksb/ai-chat.git] [none] 
+   exit=0
+   stdout: <empty>
+   stderr: fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git
+== S8 remove glab again -> expect MISSING: glab back
+   origins: [git@my_host:owner/repo.git] [file:///var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T//fm-glab-live.iOOXP4/home/remotes/x.git] [https://github.com/owner/repo.git] [git@github.com:owner/repo.git] [ssh://git@github.com:22/owner/repo.git] [https://GitHub.COM/owner/repo.git] [git@git.ksb-intax.app:ksb/ai-chat.git] [none] 
+   exit=0
+   stdout: MISSING: glab (install: brew install glab  # or the platform's package manager)
+   stderr: fatal: not a git repository (or any of the parent directories): .git
+fatal: not a git repository (or any of the parent directories): .git

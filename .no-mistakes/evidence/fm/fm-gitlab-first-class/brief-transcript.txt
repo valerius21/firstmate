@@ -1,0 +1,85 @@
+# fm-brief.sh live run: generated briefs (2026-09-10T14:15:30Z)
+
+== ship-nomistakes (--mode no-mistakes) exit=0  -> saved as brief-ship-nomistakes.md
+-- Rules section:
+# Rules
+1. Never push to the default branch. Never merge a PR.
+2. Stay inside this worktree; modify nothing outside it.
+3. Read `git remote get-url origin` to pick the forge tool: gh-axi on a github.com origin, `glab` on a
+   GitLab origin (pass `-R <project url>` to mr and ci commands and `GITLAB_HOST=<host>` to `glab api`).
+   Use chrome-devtools-axi for browser operations.
+4. Report status by appending one line:
+   `echo "{state}: {one short line}" >> '/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T//fm-brief-live.prIWIL/home/state/ship-nomistakes.status'`
+   States: working, needs-decision, blocked, paused, done, failed.
+   Each append wakes firstmate, so report sparingly: only phase changes a supervisor
+   would act on (setup done, bug reproduced, fix implemented, validation passed) and the
+   needs-decision/blocked/paused/done/failed states. No step-by-step FYI progress lines;
+-- 'gh-axi for GitHub operations' occurrences: 0
+-- Delivery contract block:
+Delivery contract: mode=no-mistakes
+The task is complete only when committed on your branch.
+When you believe it is complete, append `done: {summary}` to the status file and stop.
+Firstmate will then instruct you to run /no-mistakes to validate and ship a PR.
+
+You drive no-mistakes by responding to its gates, not by implementing fixes.
+
+== ship-directpr (--mode direct-PR) exit=0  -> saved as brief-ship-directpr.md
+-- Rules section:
+# Rules
+1. Never push to the default branch (push only your `fm/ship-directpr` branch). Never merge a PR.
+2. Stay inside this worktree; modify nothing outside it.
+3. Read `git remote get-url origin` to pick the forge tool: gh-axi on a github.com origin, `glab` on a
+   GitLab origin (pass `-R <project url>` to mr and ci commands and `GITLAB_HOST=<host>` to `glab api`).
+   Use chrome-devtools-axi for browser operations.
+4. Report status by appending one line:
+   `echo "{state}: {one short line}" >> '/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T//fm-brief-live.prIWIL/home/state/ship-directpr.status'`
+   States: working, needs-decision, blocked, paused, done, failed.
+   Each append wakes firstmate, so report sparingly: only phase changes a supervisor
+   would act on (setup done, bug reproduced, fix implemented, validation passed) and the
+   needs-decision/blocked/paused/done/failed states. No step-by-step FYI progress lines;
+-- 'gh-axi for GitHub operations' occurrences: 0
+-- Delivery contract block:
+Delivery contract: mode=direct-PR
+This task ships **direct-PR**: you raise the PR yourself, without the no-mistakes pipeline.
+The task is complete only when committed on your branch.
+When it is implemented and committed, push your branch and open a PR with `gh-axi` on a github.com origin or a merge request with `glab mr create` on a GitLab origin (decide from `git remote get-url origin`), then append `done: PR {url}` to the status file and stop; {url} is the PR or merge-request URL exactly as the forge printed it.
+Do NOT run /no-mistakes. The configured merge authority decides whether to merge the PR; firstmate relays the outcome.
+
+== ship-localonly (--mode local-only) exit=0  -> saved as brief-ship-localonly.md
+-- Rules section:
+# Rules
+1. Never push to any remote and never open a PR. Work only on your `fm/ship-localonly` branch; firstmate handles the merge into local `main`.
+2. Stay inside this worktree; modify nothing outside it.
+3. Read `git remote get-url origin` to pick the forge tool: gh-axi on a github.com origin, `glab` on a
+   GitLab origin (pass `-R <project url>` to mr and ci commands and `GITLAB_HOST=<host>` to `glab api`).
+   Use chrome-devtools-axi for browser operations.
+4. Report status by appending one line:
+   `echo "{state}: {one short line}" >> '/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T//fm-brief-live.prIWIL/home/state/ship-localonly.status'`
+   States: working, needs-decision, blocked, paused, done, failed.
+   Each append wakes firstmate, so report sparingly: only phase changes a supervisor
+   would act on (setup done, bug reproduced, fix implemented, validation passed) and the
+   needs-decision/blocked/paused/done/failed states. No step-by-step FYI progress lines;
+-- 'gh-axi for GitHub operations' occurrences: 0
+-- Delivery contract block:
+Delivery contract: mode=local-only
+This task ships **local-only**: no remote, no PR, no pipeline.
+The task is complete only when committed on your branch `fm/ship-localonly`. Do NOT push, do NOT open a PR, do NOT merge.
+Keep your branch a clean fast-forward onto the current default branch - if `main` has advanced, rebase onto it so the eventual merge stays a fast-forward.
+When it is implemented and committed, append `done: ready in branch fm/ship-localonly` to the status file and stop.
+The configured merge authority approves the ready branch, then firstmate merges it into local `main` through the guarded fast-forward path.
+
+== scout (--mode scout) exit=0  -> saved as brief-scout.md
+-- Rules section:
+# Rules
+1. Never push to any remote and never open a PR.
+2. Stay inside this worktree; the only files you may write outside it are the report and the status file below.
+3. Read `git remote get-url origin` to pick the forge tool: gh-axi on a github.com origin, `glab` on a
+   GitLab origin (pass `-R <project url>` to mr and ci commands and `GITLAB_HOST=<host>` to `glab api`).
+   Use chrome-devtools-axi for browser operations.
+4. Report status by appending one line:
+   `echo "{state}: {one short line}" >> '/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T//fm-brief-live.prIWIL/home/state/scout.status'`
+   States: working, needs-decision, blocked, paused, done, failed.
+   Each append wakes firstmate, so report sparingly: only phase changes a supervisor
+   would act on and the needs-decision/blocked/paused/done/failed states. No step-by-step
+   FYI progress lines; firstmate reads your pane for that.
+-- 'gh-axi for GitHub operations' occurrences: 0
