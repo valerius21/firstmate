@@ -60,6 +60,7 @@ Full detail on every feature lives in [docs/architecture.md](docs/architecture.m
 
 - A verified primary agent harness: Claude Code, Grok, Pi, `pi-signed`, Oh My Pi (`omp`), Codex, OpenCode, or Cursor Agent CLI.
 - Git and the GitHub CLI, authenticated through `gh auth login`.
+- For projects hosted on GitLab, including self-hosted instances, the GitLab CLI `glab`, authenticated for each instance with `glab auth login --hostname <host>`; the "Toolchain" section of [docs/configuration.md](docs/configuration.md) owns the rest of the GitLab setup.
 - The CLI and dependencies for your selected runtime backend; tmux is the reference default.
 
 The first mate detects and offers to install supported missing tools after you approve.

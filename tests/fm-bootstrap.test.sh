@@ -510,6 +510,47 @@ SH
   pass "bootstrap requires git with an install instruction"
 }
 
+# glab is required only while a registered clone has a GitLab origin: a
+# self-hosted host with no "gitlab" in its name still counts (fm-pr-lib.sh's
+# host rule), while GitHub-only, file://, and origin-less homes stay silent, and
+# an installed glab satisfies the check. The MISSING line is pinned verbatim.
+test_glab_required_only_for_gitlab_origins() {
+  local case_dir fakebin home out expected repo
+  case_dir="$TMP_ROOT/glab-required"
+  home="$case_dir/home"
+  mkdir -p "$home/config"
+  printf '%s\n' manual > "$home/config/backlog-backend"
+  fakebin=$(make_fake_toolchain "$case_dir")
+  expected="MISSING: glab (install: brew install glab  # or the platform's package manager)"
+  run_case() {
+    PATH="$fakebin:$BASE_PATH" FM_HOME="$home" FM_ROOT_OVERRIDE="$home" \
+      FM_FAKE_TREEHOUSE_LEASE_HELP=1 "$ROOT/bin/fm-bootstrap.sh" 2>/dev/null
+  }
+
+  add_origin_backed_projects "$home" 1
+  add_no_origin_projects "$home" 1
+  repo="$home/projects/github-proj"
+  git init -q "$repo"
+  git -C "$repo" remote add origin git@github.com:owner/repo.git
+  out=$(run_case)
+  [ -z "$out" ] || fail "GitHub, file, and origin-less clones must not require glab, got: $out"
+
+  repo="$home/projects/gitlab-proj"
+  git init -q "$repo"
+  git -C "$repo" remote add origin https://Git.Example.Test/group/sub/proj.git
+  out=$(run_case)
+  [ "$out" = "$expected" ] || fail "a GitLab-origin clone must report glab verbatim, got: $out"
+
+  git -C "$repo" remote set-url origin ssh://git@git.example.test:2222/group/proj.git
+  out=$(run_case)
+  [ "$out" = "$expected" ] || fail "an ssh GitLab origin with a port must report glab, got: $out"
+
+  fm_fake_exit0 "$fakebin" glab
+  out=$(run_case)
+  [ -z "$out" ] || fail "an installed glab must satisfy the check, got: $out"
+  pass "bootstrap requires glab only for clones with a GitLab origin"
+}
+
 test_orca_backend_gates_orca_tool_only_when_selected() {
   local case_dir fakebin out missing_orca
   missing_orca="MISSING: orca (install: brew install orca  # or the platform's package manager)"
@@ -1161,6 +1202,7 @@ test_lavish_axi_min_version
 test_tasks_axi_min_version
 test_quota_axi_min_version
 test_git_is_required_with_supported_install_instruction
+test_glab_required_only_for_gitlab_origins
 test_orca_backend_gates_orca_tool_only_when_selected
 test_session_provider_backends_do_not_require_tmux
 test_session_provider_backends_gate_own_cli_not_tmux

@@ -199,7 +199,7 @@ fm_dod_block() {  # <mode> <task-id>
 Delivery contract: mode=direct-PR
 This task ships **direct-PR**: you raise the PR yourself, without the no-mistakes pipeline.
 The task is complete only when committed on your branch.
-When it is implemented and committed, push your branch and open a PR with \`gh-axi\`, then append \`done: PR {url}\` to the status file and stop.
+When it is implemented and committed, push your branch and open a PR with \`gh-axi\` on a github.com origin or a merge request with \`glab mr create\` on a GitLab origin (decide from \`git remote get-url origin\`), then append \`done: PR {url}\` to the status file and stop; {url} is the PR or merge-request URL exactly as the forge printed it.
 Do NOT run /no-mistakes. The configured merge authority decides whether to merge the PR; firstmate relays the outcome.
 EOF
       ;;

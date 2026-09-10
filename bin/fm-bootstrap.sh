@@ -60,6 +60,12 @@
 #          build below its floor reports MISSING like no-mistakes, so the operator
 #          is asked to upgrade rather than silently running an older tool.
 #          tasks-axi feature probes remain a separate defense-in-depth check.
+#          glab is MISSING only while at least one clone under projects/ has an
+#          origin whose host passes bin/fm-pr-lib.sh's GitLab host rule: any
+#          DNS host but literally github.com counts as GitLab, so a GitHub SSH
+#          alias (git@github-work:o/r.git) or another forge also triggers the
+#          line. Such a home may ignore it or silence it by installing glab; a
+#          home with only github.com, file, or no origins is never told to.
 #          tasks-axi and quota-axi are required bootstrap tools (same class as
 #          lavish-axi). A compatible tasks-axi default backend is silent.
 #          quota-axi is required for the agent-owned dispatch-profile array
@@ -155,6 +161,8 @@ STATE="${FM_STATE_OVERRIDE:-$FM_HOME/state}"
 DATA="${FM_DATA_OVERRIDE:-$FM_HOME/data}"
 # shellcheck source=bin/fm-tasks-axi-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-tasks-axi-lib.sh"
+# shellcheck source=bin/fm-pr-lib.sh disable=SC1091
+. "$SCRIPT_DIR/fm-pr-lib.sh"
 # shellcheck source=bin/fm-backlog-transition-lib.sh disable=SC1091
 . "$SCRIPT_DIR/fm-backlog-transition-lib.sh"
 # shellcheck source=bin/fm-quota-axi-lib.sh disable=SC1091
@@ -856,7 +864,7 @@ secondmate_handoff_detect() {
 
 install_cmd() {
   case "$1" in
-    tmux|node|git|gh|curl|jq|orca|zellij) echo "brew install $1  # or the platform's package manager" ;;
+    tmux|node|git|gh|glab|curl|jq|orca|zellij) echo "brew install $1  # or the platform's package manager" ;;
     cmux) echo "brew install --cask cmux  # or see https://cmux.com" ;;
     treehouse) echo "curl -fsSL https://kunchenguid.github.io/treehouse/install.sh | sh" ;;
     no-mistakes) echo "curl -fsSL https://raw.githubusercontent.com/kunchenguid/no-mistakes/main/docs/install.sh | sh" ;;
@@ -872,6 +880,37 @@ manual_install_url() {
     cursor-agent) echo "https://cursor.com/cli" ;;
     *) return 1 ;;
   esac
+}
+
+# Host of a clone's origin URL: scheme://[user@]host[:port]/path or the
+# scp-like [user@]host:path. A file:// or path-only origin has no host.
+origin_url_host() {
+  local url=$1
+  case "$url" in
+    *://*) url=${url#*://}; url=${url%%/*} ;;
+    *:*) url=${url%%:*} ;;
+    *) return 1 ;;
+  esac
+  url=${url##*@}
+  url=${url%%:*}
+  [ -n "$url" ] || return 1
+  printf '%s\n' "$url" | tr '[:upper:]' '[:lower:]'
+}
+
+# True when a clone under projects/ has a GitLab origin per fm-pr-lib.sh's host
+# rule; see the header for why any non-github.com host counts as GitLab.
+gitlab_project_present() {
+  local proj url host
+  [ -d "$PROJECTS" ] || return 1
+  for proj in "$PROJECTS"/*; do
+    [ -d "$proj" ] || continue
+    url=$(git -C "$proj" remote get-url origin 2>/dev/null) || continue
+    host=$(origin_url_host "$url") || continue
+    if fm_pr_gitlab_host_valid "$host"; then
+      return 0
+    fi
+  done
+  return 1
 }
 
 missing_tool_diagnostic() {
@@ -1412,6 +1451,9 @@ detect_local_tools() {
   for t in $COMMON_TOOLS; do
     command -v "$t" >/dev/null || missing_tool_diagnostic "$t"
   done
+  if ! command -v glab >/dev/null 2>&1 && gitlab_project_present; then
+    missing_tool_diagnostic glab
+  fi
   # The treehouse lease-support upgrade check is only relevant when the resolved
   # backend actually requires treehouse (every backend except orca, which owns its
   # own worktrees); an orca home must not be told to upgrade a provider it never uses.
