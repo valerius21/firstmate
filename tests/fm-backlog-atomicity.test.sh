@@ -2891,6 +2891,48 @@ test_dispatch_and_completion_are_structural() {
   pass "dispatch and completion transition structurally with evidence"
 }
 
+test_completion_records_a_gitlab_merge_request_link_in_the_body() {
+  local case_dir home id meta out mr
+  id=fm-structural-gitlab-b15
+  mr=https://git.example.com/group/sub/project/-/merge_requests/75
+  case_dir=$(make_home structural-gitlab "$id")
+  home=$(home_of "$case_dir")
+  add_item "$case_dir" "$id"
+  out=$(run_ship_spawn "$case_dir" "$id") \
+    || fail "gitlab spawn failed: $out"
+  meta="$home/state/$id.meta"
+  printf 'pr=%s\n' "$mr" >> "$meta"
+  out=$(run_teardown "$case_dir" "$id") \
+    || fail "teardown with a merge-request link failed: $out"
+  [ "$(row_state "$case_dir" "$id")" = "done" ] \
+    || fail "teardown left the merge-request item outside Done: $out"
+  assert_grep "MR $mr" "$(backlog_of "$case_dir")" \
+    "teardown closed the item without its recorded merge-request link"
+  assert_absent "$home/state/$id.backlog-close" \
+    "teardown left a pending close behind for a merge-request link"
+  pass "completion records a GitLab merge-request link in the item body"
+}
+
+test_recovery_closes_a_pending_close_carrying_a_gitlab_merge_request_link() {
+  local case_dir id marker out mr
+  id=atomic-heal-gitlab-b9
+  mr=https://git.example.com/group/project/-/merge_requests/75
+  case_dir=$(make_home heal-gitlab)
+  add_item "$case_dir" "$id"
+  start_item "$case_dir" "$id"
+  marker="$(home_of "$case_dir")/state/$id.backlog-close"
+  printf 'id=%s\ndata=%s\nspawn_gen=spawn-heal-gitlab\narg=--pr\narg=%s\n' \
+    "$id" "$(home_of "$case_dir")/data" "$mr" > "$marker"
+
+  out=$(run_bootstrap "$case_dir")
+  [ "$(row_state "$case_dir" "$id")" = "done" ] \
+    || fail "recovery did not close the row recorded with a merge-request link: $out"
+  assert_grep "MR $mr" "$(backlog_of "$case_dir")" \
+    "recovery closed the row without its merge-request link"
+  assert_absent "$marker" "recovery retained an applied merge-request pending close"
+  pass "recovery closes a pending close carrying a GitLab merge-request link"
+}
+
 test_refused_teardown_leaves_the_item_live() {
   local case_dir home id out rc=0
   id=fm-structural-refusal-b15
@@ -3087,6 +3129,8 @@ test_spawn_refuses_an_unsafe_tasks_config_before_exempting_a_missing_backlog
 test_spawn_refuses_a_data_directory_symlinked_outside_the_home
 test_configured_adapter_refuses_a_data_directory_outside_the_home
 test_dispatch_and_completion_are_structural
+test_completion_records_a_gitlab_merge_request_link_in_the_body
+test_recovery_closes_a_pending_close_carrying_a_gitlab_merge_request_link
 test_refused_teardown_leaves_the_item_live
 test_environment_selected_adapter_is_not_forced_to_markdown
 test_manual_backend_home_dispatches_and_completes_without_touching_the_backlog
