@@ -65,7 +65,7 @@
 #          upgrade recommendation for synchronous reply acceptance.
 #          tasks-axi feature probes remain a separate defense-in-depth check.
 #          glab is MISSING only while at least one clone under projects/ has an
-#          origin whose host passes bin/fm-pr-lib.sh's GitLab host rule: any
+#          origin whose host passes bin/fm-pr-lib.sh's forge host rule: any
 #          DNS host but literally github.com counts as GitLab, so a GitHub SSH
 #          alias (git@github-work:o/r.git) or another forge also triggers the
 #          line. Such a home may ignore it or silence it by installing glab; a
@@ -849,7 +849,7 @@ gitlab_project_present() {
     [ -d "$proj" ] || continue
     url=$(git -C "$proj" remote get-url origin 2>/dev/null) || continue
     host=$(origin_url_host "$url") || continue
-    if fm_pr_gitlab_host_valid "$host"; then
+    if fm_pr_forge_host_valid "$host"; then
       return 0
     fi
   done
