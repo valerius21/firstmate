@@ -528,8 +528,8 @@ SH
 
 # glab is required only while a registered clone has a GitLab origin: a
 # self-hosted host with no "gitlab" in its name still counts (fm-pr-lib.sh's
-# host rule), while GitHub-only, file://, and origin-less homes stay silent, and
-# an installed glab satisfies the check. The MISSING line is pinned verbatim.
+# host rule), while GitHub-only, file://, origin-less, and registered
+# forge=forgejo homes stay silent, and an installed glab satisfies the check. The MISSING line is pinned verbatim.
 test_glab_required_only_for_gitlab_origins() {
   local case_dir fakebin home out expected repo
   case_dir="$TMP_ROOT/glab-required"
@@ -550,6 +550,14 @@ test_glab_required_only_for_gitlab_origins() {
   git -C "$repo" remote add origin git@github.com:owner/repo.git
   out=$(run_case)
   [ -z "$out" ] || fail "GitHub, file, and origin-less clones must not require glab, got: $out"
+
+  repo="$home/projects/forgejo-proj"
+  git init -q "$repo"
+  git -C "$repo" remote add origin https://codeberg.org/owner/repo.git
+  mkdir -p "$home/data"
+  printf '%s\n' '- forgejo-proj [no-mistakes forge=forgejo] - Codeberg project (added 2026-10-13)' > "$home/data/projects.md"
+  out=$(run_case)
+  [ -z "$out" ] || fail "a registered forgejo clone must not require glab, got: $out"
 
   repo="$home/projects/gitlab-proj"
   git init -q "$repo"

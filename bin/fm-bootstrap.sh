@@ -66,10 +66,12 @@
 #          tasks-axi feature probes remain a separate defense-in-depth check.
 #          glab is MISSING only while at least one clone under projects/ has an
 #          origin whose host passes bin/fm-pr-lib.sh's forge host rule: any
-#          DNS host but literally github.com counts as GitLab, so a GitHub SSH
-#          alias (git@github-work:o/r.git) or another forge also triggers the
-#          line. Such a home may ignore it or silence it by installing glab; a
-#          home with only github.com, file, or no origins is never told to.
+#          DNS host but literally github.com counts as GitLab unless the clone
+#          is registered forge=gerrit or forge=forgejo (fm-project-mode.sh
+#          --forge), so a GitHub SSH alias (git@github-work:o/r.git) or an
+#          unregistered other forge also triggers the line. Such a home may
+#          ignore it or silence it by installing glab; a home with only
+#          github.com, file, gerrit/forgejo-bound, or no origins is never told to.
 #          tasks-axi and quota-axi are essential bootstrap tools.
 #          A compatible tasks-axi default backend is silent.
 #          quota-axi is required for the agent-owned dispatch-profile array
@@ -841,7 +843,7 @@ origin_url_host() {
 }
 
 # True when a clone under projects/ has a GitLab origin per fm-pr-lib.sh's host
-# rule; see the header for why any non-github.com host counts as GitLab.
+# rule and no gerrit or forgejo registry binding; see the header.
 gitlab_project_present() {
   local proj url host
   [ -d "$PROJECTS" ] || return 1
@@ -849,9 +851,11 @@ gitlab_project_present() {
     [ -d "$proj" ] || continue
     url=$(git -C "$proj" remote get-url origin 2>/dev/null) || continue
     host=$(origin_url_host "$url") || continue
-    if fm_pr_forge_host_valid "$host"; then
-      return 0
-    fi
+    fm_pr_forge_host_valid "$host" || continue
+    case $(FM_HOME="$FM_HOME" FM_DATA_OVERRIDE="$DATA" "$SCRIPT_DIR/fm-project-mode.sh" --forge "${proj##*/}" 2>/dev/null) in
+      gerrit|forgejo) continue ;;
+    esac
+    return 0
   done
   return 1
 }
