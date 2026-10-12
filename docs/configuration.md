@@ -1377,7 +1377,7 @@ A herdr, zellij, or cmux home is therefore never told `tmux` is missing, and the
 - An absent or incompatible `gh-axi` reports `MISSING: gh-axi (install: npm install -g gh-axi && gh-axi setup hooks)`.
 - GitLab projects, including self-hosted instances, are supported alongside GitHub: while any clone under `projects/` has a GitLab origin, bootstrap also requires the GitLab CLI and reports `MISSING: glab (install: brew install glab  # or the platform's package manager)`.
   For this check any origin host other than literally `github.com` is treated as a GitLab origin unless the clone is registered `forge=gerrit` or `forge=forgejo` in `data/projects.md`, so a home whose only such origins are GitHub SSH aliases such as `git@github-work:owner/repo.git` or unregistered other forges sees one `MISSING: glab` line per session start, which it may ignore or silence by installing glab.
-  A home with only `github.com`, file, or no origins is never asked for it.
+  A home whose clones all have `github.com`, file, or no origins, or are registered `forge=gerrit` or `forge=forgejo`, is never asked for it.
   Bootstrap does not check GitLab login, so authenticate each instance yourself with `glab auth login --hostname <host>`, set `GITLAB_HOST=<host>` for `glab api` calls, and give HTTPS clones `credential.helper='!glab auth git-credential'` when the instance offers no SSH.
   Workers pick `gh-axi` or `glab` from the project's origin remote, and merge-request watching and merging are verified in [gitlab-merge-watch.md](gitlab-merge-watch.md).
 - An absent or board-incompatible `lavish-axi` reports `PRESENTATION_UNAVAILABLE` with the 0.1.77 compatibility floor, install command, and explicit text fallback; compatible versions below 0.1.80 retain legacy board replies and report an upgrade recommendation for synchronous acceptance, while [`bootstrap-diagnostics`](../.agents/skills/bootstrap-diagnostics/SKILL.md) owns diagnostic handling.
@@ -1426,7 +1426,7 @@ It uses the same live secondmate discovery and propagation helper as bootstrap; 
 
 ## Forge selection (data/projects.md forge= token)
 
-A project with no `forge=` token is served by the GitHub tooling, `gh` and `gh-axi`, exactly as before the token existed, and the token changes nothing for existing entries.
+A project with no `forge=` token is served by the tooling its origin remote names, exactly as before the token existed: `gh` and `gh-axi` on GitHub, and `glab` on GitLab, which the generated brief and Definition of done have the worker pick from `git remote get-url origin`; the token changes nothing for existing entries.
 A remote-backed project on a Forgejo or Gitea server is registered with `forge=forgejo`, one value of the same closed `forge=` binding that Gerrit uses; `bin/fm-project-mode.sh`'s header owns its grammar, values, and refusals, and `bin/fm-project-mode.sh --forge <name>` reads it back.
 Firstmate passes the binding to `bin/fm-brief.sh --forge` at intake the same way it passes `--mode`, and `bin/fm-spawn.sh` refuses a brief whose forge disagrees with the registry; on `forgejo` the generated ship brief names `tea` instead of `gh-axi`.
 The URL-driven provider dispatch in [`bin/fm-pr-lib.sh`](../bin/fm-pr-lib.sh) recognizes a GitHub, GitLab, Gerrit, or Forgejo PR/MR/change URL once one exists, regardless of this token.
