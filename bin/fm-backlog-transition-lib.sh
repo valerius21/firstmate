@@ -56,14 +56,16 @@
 # first applies any supported retained artifact from the validated record, then
 # replay simply retires the record.
 #
-# FORGE LINKS. tasks-axi's `--pr` flag accepts GitHub pull-request URLs only,
-# while a task's recorded pr= may be a GitLab merge-request URL. Every `--pr`
-# this library forwards is classified through bin/fm-pr-lib.sh's provider parse:
-# a github link is passed as `--pr`, and any other link is carried into the
-# item body instead - as `tasks-axi done --note "MR <url>"` on a close, and as
-# the deliverable line on a retention - so the transition succeeds and the link
-# survives. The pending-close record keeps the original `--pr <url>` pair; the
-# rewrite happens when the close is applied, so an old record replays correctly.
+# FORGE LINKS. tasks-axi's `--pr` flag accepts GitHub and Forgejo pull-request
+# URLs only, while a task's recorded pr= may be a Gerrit change or GitLab
+# merge-request URL. Every `--pr` this library forwards is classified through
+# bin/fm-pr-lib.sh's provider parse (fm_backlog_pr_note_label): a link `--pr`
+# can hold is passed as `--pr`, and a Gerrit or GitLab link is carried into the
+# item body instead - as `tasks-axi done --note "Gerrit change <url>"` or
+# `--note "MR <url>"` on a close, and as the deliverable line on a retention -
+# so the transition succeeds and the link survives. The pending-close record
+# keeps the original `--pr <url>` pair; the rewrite happens when the close is
+# applied, so an old record replays correctly.
 
 # Set by fm_backlog_transition_applies for a return-1 exemption.
 # shellcheck disable=SC2034 # Output global, read by the sourcing caller.
@@ -87,6 +89,13 @@ FM_BACKLOG_CLOSE_REPLAY_RESULT=
 # library does not source fm-tasks-axi-lib.sh does not apply.
 # shellcheck source=bin/fm-timeout-lib.sh disable=SC1091
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fm-timeout-lib.sh"
+# fm-pr-lib.sh owns which URL is a Gerrit change. It is functions and empty
+# globals only, so it is sourced once rather than re-initialising a caller's
+# parsed identity.
+if ! declare -F fm_pr_url_parse >/dev/null 2>&1; then
+  # shellcheck source=bin/fm-pr-lib.sh disable=SC1091
+  . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/fm-pr-lib.sh"
+fi
 
 # Latched when a row read hits its bound. fm_backlog_row_show runs inside a
 # command substitution, so the subshell can READ this latch but cannot set it;
@@ -328,28 +337,17 @@ fm_backlog_transition_applies() {  # <config-dir> <data-dir> <kind>
 # Run `tasks-axi` with an optional FM_TASKS_AXI_TIMEOUT bound. A caller that
 # holds a lock across the call - the spawn commit and its preservation
 # read-back run under the per-task meta lock - sets the bound, so an
-# unresponsive tasks-axi cannot hold that lock open indefinitely; a timed-out
-# call exits 124, or 137 when the kill-after had to fire (GNU timeout's own
-# status for a KILL-forced expiry), and the callers treat either as the bound
-# expiring and report the timeout as the reason through their existing error
-# plumbing. GNU timeout is used where it exists,
-# gtimeout where coreutils ships under that name, and a small perl watchdog
-# elsewhere (a stock macOS host has perl but no timeout variant; perl is
-# already a hard dependency of this library's byte validators, so the
-# fallback adds no new tool). Every bounded path forces termination: a
-# tasks-axi that ignores SIGTERM must not outlive the bound, since an
-# unbounded call under the lock is exactly the hang the bound exists to
-# prevent - so the GNU variants carry a kill-after of one further bound
-# (TERM at the bound, KILL after that grace) and the watchdog kills the
-# same way. When a bound was requested but no bounding mechanism exists at
-# all, the call fails closed instead of running unbounded. Must be the last
-# command of a subshell: the exec keeps the tasks-axi process exactly where
-# the plain call sat, and the bound kills the child, not the caller.
+# unresponsive tasks-axi cannot hold that lock open indefinitely. The bound is
+# fm_exec_timed's (bin/fm-timeout-lib.sh), with one further bound of grace
+# before KILL so a tasks-axi that ignores SIGTERM cannot outlive it either; the
+# callers treat fm_timed_out statuses as the bound expiring and report the
+# timeout as the reason through their existing error plumbing. A bound that
+# cannot be enforced on this host fails closed instead of running unbounded.
+# Must be the last command of a subshell: the exec keeps the tasks-axi process
+# exactly where the plain call sat, and the bound kills the child, not the
+# caller.
 fm_tasks_axi_timeout_expired() {  # <status>
-  case $1 in
-    124 | 137) return 0 ;;
-  esac
-  return 1
+  fm_timed_out "$1"
 }
 
 fm_tasks_axi() {
@@ -357,49 +355,7 @@ fm_tasks_axi() {
   if [ -z "$bound" ]; then
     exec tasks-axi "$@"
   fi
-  if command -v timeout >/dev/null 2>&1; then
-    exec timeout -k "$bound" "$bound" tasks-axi "$@"
-  elif command -v gtimeout >/dev/null 2>&1; then
-    exec gtimeout -k "$bound" "$bound" tasks-axi "$@"
-  elif command -v perl >/dev/null 2>&1; then
-    # Fork, run tasks-axi in the child, and poll waitpid(WNOHANG) until the
-    # child exits or the bound expires: the same contract as
-    # `timeout $bound tasks-axi ...`. Expiry kills the child with TERM, waits
-    # one further bound of grace, then KILL, and exits 124 so the callers'
-    # timeout plumbing reports it. Polling rather than alarm+die keeps the
-    # bound off perl's platform-dependent syscall-restart signal semantics.
-    exec perl -MPOSIX=WNOHANG -e '
-      my $bound = shift;
-      exit 127 unless defined $bound && $bound =~ /\A[0-9]+\z/;
-      my $pid = fork;
-      exit 127 unless defined $pid;
-      if ($pid == 0) { exec @ARGV; exit 127 }
-      my $step = 0.05;
-      my $elapsed = 0;
-      while (1) {
-        my $done = waitpid $pid, WNOHANG;
-        exit(($? & 127) ? 128 + ($? & 127) : $? >> 8) if $done == $pid;
-        exit 127 if $done == -1;
-        if ($elapsed >= $bound) {
-          kill "TERM", $pid;
-          my $grace = 0;
-          my $gone = waitpid $pid, WNOHANG;
-          while ($gone == 0 && $grace < $bound) {
-            select undef, undef, undef, $step;
-            $grace += $step;
-            $gone = waitpid $pid, WNOHANG;
-          }
-          kill "KILL", $pid if $gone == 0;
-          waitpid $pid, 0;
-          exit 124;
-        }
-        select undef, undef, undef, $step;
-        $elapsed += $step;
-      }
-    ' -- "$bound" tasks-axi "$@"
-  fi
-  printf 'fm_tasks_axi: cannot bound tasks-axi within %ss: none of timeout, gtimeout, or perl is available\n' "$bound" >&2
-  exit 127
+  fm_exec_timed "$bound" "$bound" tasks-axi "$@"
 }
 
 # Print one row's `tasks-axi show` output (plus stderr) from the addressing
@@ -571,35 +527,41 @@ fm_backlog_start() {  # <data-dir> <id>
   fm_backlog_mutate "$1" start "$2"
 }
 
-# True when <url> is a GitHub pull-request URL, the only link tasks-axi's
-# `--pr` accepts (FORGE LINKS above).
-fm_backlog_pr_flag_supported() {  # <url>
-  if ! declare -F fm_pr_url_parse >/dev/null; then
-    # shellcheck source=bin/fm-pr-lib.sh disable=SC1091
-    . "${BASH_SOURCE[0]%/*}/fm-pr-lib.sh"
-  fi
-  fm_pr_url_parse "$1" && [ "$FM_PR_PROVIDER" = github ]
+# tasks-axi takes a --pr link only as a canonical GitHub or Forgejo pull request
+# and refuses anything else, so a Gerrit change or GitLab merge-request URL is
+# recorded on the row as a note instead (FORGE LINKS above). Prints the note
+# label for such a link and fails for one --pr can hold. The subshell keeps the
+# parse from overwriting a caller's FM_PR_* identity.
+fm_backlog_pr_note_label() {  # <url>
+  ( fm_pr_url_parse "$1" || exit 1
+    case $FM_PR_PROVIDER in
+      gerrit) printf 'Gerrit change' ;;
+      gitlab) printf 'MR' ;;
+      *) exit 1 ;;
+    esac )
 }
 
 fm_backlog_done() {  # <data-dir> <id> [flag...]
   local data=$1 id=$2 arg previous_arg=''
-  local -a args=()
+  local -a done_args=()
+  local label
   shift 2
   for arg in "$@"; do
-    if [ "$previous_arg" = --pr ] && ! fm_backlog_pr_flag_supported "$arg"; then
-      args[${#args[@]}-1]=--note
-      arg="MR $arg"
+    if [ "$previous_arg" = --pr ] && label=$(fm_backlog_pr_note_label "$arg"); then
+      done_args[${#done_args[@]}-1]=--note
+      done_args+=("$label $arg")
+    else
+      done_args+=("$arg")
     fi
-    args+=("$arg")
     previous_arg=$arg
   done
-  fm_backlog_mutate "$data" "done" "$id" "${args[@]+"${args[@]}"}"
+  fm_backlog_mutate "$data" "done" "$id" "${done_args[@]+"${done_args[@]}"}"
 }
 
 fm_backlog_row_artifact_supported() {
   local id=$1 flag=${2:-} value=${3:-}
   case "$flag" in
-    --pr) fm_backlog_pr_flag_supported "$value" ;;
+    --pr) ! fm_backlog_pr_note_label "$value" >/dev/null ;;
     --report) [ "$value" = "data/$id/report.md" ] ;;
     *) return 1 ;;
   esac
@@ -631,9 +593,11 @@ fm_backlog_retain() {  # <data-dir> <id> [flag...]
         fi
         ;;
       --pr)
-        deliverable="${deliverable:+$deliverable; }PR $arg"
         if fm_backlog_row_artifact_supported "$id" --pr "$arg"; then
+          deliverable="${deliverable:+$deliverable; }PR $arg"
           row_args=(--pr "$arg")
+        else
+          deliverable="${deliverable:+$deliverable; }$(fm_backlog_pr_note_label "$arg") $arg"
         fi
         ;;
       --note) deliverable="${deliverable:+$deliverable; }$arg" ;;
@@ -650,13 +614,22 @@ fm_backlog_retain() {  # <data-dir> <id> [flag...]
         || FM_BACKLOG_TRANSITION_ERROR="tasks-axi show $id failed with no output"
       return "$command_status"
     fi
+    # The leading quote selects a JSON-encoded bare string, which is exactly the
+    # value an older JSON::PP rejects unless allow_nonref is asked for, so the
+    # decoder below requests it rather than inheriting the local default. It then
+    # writes bytes, because printing the decoded characters to a stream with no
+    # :raw layer emits a codepoint at or below U+00FF as one latin-1 byte and
+    # silently corrupts the body this rewrites.
     body=$(printf '%s\n' "$out" | sed -n 's/^  body: //p' | head -1 \
       | LC_ALL=C perl -MJSON::PP -e '
         local $/;
         my $shown = <STDIN>;
         $shown =~ s/\s+\z//;
         exit 0 if $shown eq "" || $shown eq "-";
-        my $value = $shown =~ /\A"/ ? decode_json($shown) : $shown;
+        my $value = $shown =~ /\A"/
+          ? JSON::PP->new->utf8->allow_nonref->decode($shown) : $shown;
+        binmode STDOUT, ":raw";
+        utf8::encode($value) if utf8::is_utf8($value);
         print $value unless $value eq "-";
       ') || {
       FM_BACKLOG_TRANSITION_ERROR="could not decode the task body of $id"
