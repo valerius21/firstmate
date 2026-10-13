@@ -577,7 +577,8 @@ test_glab_required_only_for_gitlab_origins() {
 
 # Once glab is installed, the network phase probes `glab auth status --hostname`
 # once per DISTINCT GitLab origin host and prints one NEEDS_GLAB_AUTH line per
-# failing host; the local-only phase never probes, and the probe never blocks
+# failing host (a gerrit/forgejo-registered clone is not GitLab); the
+# local-only phase never probes, and the probe never blocks
 # on a prompt. The line is pinned verbatim.
 test_glab_auth_probed_per_gitlab_host() {
   local case_dir fakebin home out repo calls
@@ -612,11 +613,15 @@ SH
   git -C "$home/projects/gitlab-three" remote add origin git@gitlab.other.test:group/three.git
   git init -q "$home/projects/github-proj"
   git -C "$home/projects/github-proj" remote add origin git@github.com:owner/repo.git
+  git init -q "$home/projects/forgejo-proj"
+  git -C "$home/projects/forgejo-proj" remote add origin https://codeberg.test/owner/repo.git
+  mkdir -p "$home/data"
+  printf '%s\n' '- forgejo-proj [no-mistakes forge=forgejo] - Codeberg project (added 2026-10-13)' > "$home/data/projects.md"
 
   out=$(echo prompt-bait | run_case)
   [ -z "$out" ] || fail "every GitLab host logged in must stay silent, got: $out"
   [ "$(sort "$calls" | tr '\n' ' ')" = "git.example.test gitlab.other.test " ] \
-    || fail "expected one probe per distinct GitLab host, never github.com, got: $(tr '\n' ' ' < "$calls")"
+    || fail "expected one probe per distinct GitLab host, never github.com or a forgejo-registered host, got: $(tr '\n' ' ' < "$calls")"
 
   : > "$calls"
   out=$(FM_FAKE_GLAB_LOGGED_OUT=git.example.test run_case)
