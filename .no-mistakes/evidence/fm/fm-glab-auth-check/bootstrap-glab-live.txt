@@ -1,0 +1,49 @@
+glab: glab 1.122.0 (89d0008af)
+lab home: /var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T//fm-lab.mACY2t
+
+### S1 genuine GitLab host, logged in (git.ksb-intax.app) -> no NEEDS_GLAB_AUTH
+(elapsed 1s)
+
+### S2 GitLab host NOT logged in (gitlab.com, two clones, mixed case) -> exactly one line
+NEEDS_GLAB_AUTH: gitlab.com
+(elapsed 2s)
+
+### S3 github.com and forgejo-registered clones added -> never probed, output unchanged
+NEEDS_GLAB_AUTH: gitlab.com
+(elapsed 2s)
+
+### S4 GitHub SSH alias host -> documented ignorable NEEDS_GLAB_AUTH: github-work
+NEEDS_GLAB_AUTH: github-work
+NEEDS_GLAB_AUTH: gitlab.com
+(elapsed 3s)
+
+### S5 unreachable/blackholed instance -> reported as NEEDS_GLAB_AUTH, bounded at ~15s
+NEEDS_GLAB_AUTH: 10.255.255.1
+NEEDS_GLAB_AUTH: github-work
+NEEDS_GLAB_AUTH: gitlab.com
+(elapsed 4s)
+
+### S6 FM_BOOTSTRAP_NETWORK=skip (local pass) -> no glab probe lines
+(elapsed 1s)
+
+### S7 glab not installed -> MISSING: glab only, no NEEDS_GLAB_AUTH
+MISSING: glab (install: brew install glab  # or the platform's package manager)
+(elapsed 2s)
+
+LAB=/var/folders/wz/dfpbtyzn3j9b2nzb1pcpm0j40000gn/T//fm-lab.mACY2t
+
+### S5b blackholed instance glab really dials (dummy token in throwaway config copy) -> bound fires at ~15s, reported as NEEDS_GLAB_AUTH
+raw glab exited 2 after 20s
+NEEDS_GLAB_AUTH: 10.255.255.1
+NEEDS_GLAB_AUTH: git.ksb-intax.app
+NEEDS_GLAB_AUTH: github-work
+NEEDS_GLAB_AUTH: gitlab.com
+(bootstrap elapsed 1s)
+(the S5b attempt above is void: the dummy host was appended outside the yaml hosts: map and broke the throwaway config, so every probe failed; redone below)
+
+### S5b (redo) blackholed instance configured in throwaway config copy so real glab dials it
+raw 'glab auth status --hostname 10.255.255.1' unbounded: ~31s before it gives up
+NEEDS_GLAB_AUTH: 10.255.255.1
+NEEDS_GLAB_AUTH: github-work
+NEEDS_GLAB_AUTH: gitlab.com
+(bootstrap elapsed 18s; git.ksb-intax.app logged in -> absent)
