@@ -36,7 +36,7 @@ The locked startup inactive-outcome scan joins that worker so a slow local curre
    The closing reminder points back to the emitted supervision block and preserves only the lock, afk, Relay, and read-once reminders.
 
 Bootstrap detects first, asks for consent, and installs only after the captain approves in the current session.
-Do not dispatch until the essential launch tools are present and GitHub authentication is good; a GitLab project also needs its `glab` instance login, which bootstrap does not check (`docs/configuration.md` "Toolchain"); presentation availability follows `bootstrap-diagnostics` and does not block nonvisual work.
+Do not dispatch until the essential launch tools are present and GitHub authentication is good; a GitLab project also needs its `glab` instance login, which the deferred network stage probes per host once glab is installed (`docs/configuration.md` "Toolchain"); presentation availability follows `bootstrap-diagnostics` and does not block nonvisual work.
 Use `gh-axi` for GitHub, `glab` for GitLab, `chrome-devtools-axi` for browser work, and compatible `lavish-axi` for visual decisions or reports; consult current help rather than memorizing flags.
 A silent bootstrap section needs no action; for any printed actionable diagnostic line, load `bootstrap-diagnostics` and follow its owner procedure.
 `BOOTSTRAP_INFO:` lines are completed no-action facts and do not require loading a skill.
