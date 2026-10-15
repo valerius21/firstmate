@@ -1,0 +1,4 @@
+origin	https://github.com/valerius21/firstmate.git (fetch)
+origin	https://github.com/valerius21/firstmate.git (push)
+upstream	https://github.com/kunchenguid/firstmate.git (fetch)
+upstream	https://github.com/kunchenguid/firstmate.git (push)

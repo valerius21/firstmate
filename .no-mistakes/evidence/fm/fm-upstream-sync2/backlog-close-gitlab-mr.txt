@@ -1,0 +1,18 @@
+$ (raw) tasks-axi done gl-np --pr https://gitlab.example.com/team/demo/-/merge_requests/7
+error: "Task pr link must be a canonical pull request URL: https://github.com/<owner>/<repo>/pull/<n> (GitHub) or https://<host>/<owner>/<repo>/pulls/<n> (Forgejo)"
+code: VALIDATION_ERROR
+exit=2
+$ fm_backlog_done $LAB/data gl-np --pr https://gitlab.example.com/team/demo/-/merge_requests/7
+exit=0 err=
+$ fm_backlog_done $LAB/data gh-x --pr https://github.com/o/r/pull/42
+exit=0 err=
+$ cat data/backlog.md
+# Backlog
+
+## In flight
+## Queued
+
+## Done
+- [x] gh-x - GitHub ship https://github.com/o/r/pull/42 (kind: ship) (merged 2026-10-15)
+- [x] gl-np - GitLab ship (kind: ship) (done 2026-10-15)
+  MR https://gitlab.example.com/team/demo/-/merge_requests/7

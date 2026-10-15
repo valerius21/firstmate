@@ -1,0 +1,3 @@
+$ FM_HOME=$LAB bin/fm-brief.sh gl-np demo --mode no-mistakes --project $LAB/projects/demo
+scaffolded: $LAB/data/gl-np/brief.md (ship, mode=no-mistakes; replace {TASK} and {FIRSTMATE_SPEC})
+exit=0

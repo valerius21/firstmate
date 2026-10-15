@@ -1,0 +1,4 @@
+$ FM_HOME=$LAB bin/fm-brief.sh fm-up firstmate --mode direct-PR --project $LAB/projects/firstmate
+error: this home runs as firstmate user/operator and holds no publication authority for github.com/kunchenguid/firstmate
+error: to let this home publish to github.com/kunchenguid/firstmate, write 'maintainer github.com/kunchenguid/firstmate' into $LAB/config/firstmate-role (docs/configuration.md "Firstmate role"), or pass --upstream-consent github.com/kunchenguid/firstmate for this one task with the captain's explicit approval
+exit=1
